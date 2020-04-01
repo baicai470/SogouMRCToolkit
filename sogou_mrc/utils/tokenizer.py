@@ -6,7 +6,7 @@ import multiprocessing
 import re
 class SpacyTokenizer(object):
     def __init__(self,fine_grained=False):
-        self.nlp = spacy.load('en', disable=['parser','tagger','entity'])
+        self.nlp = spacy.load('en_core_web_sm', disable=['parser','tagger','entity'])
         self.fine_grained = fine_grained
 
     def word_tokenizer(self, doc):

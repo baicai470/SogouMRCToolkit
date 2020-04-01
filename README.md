@@ -9,11 +9,11 @@
 ```sh
 $ git clone https://github.com/sogou/SMRCToolkit.git
 $ cd SMRCToolkit
-$ pip install [-e] .
+$ pip install -e .
 ```
 Option *-e* makes your installation **editable**, i.e., it links it to your source directory
 
-This repo was tested on Python 3 and Tensorflow 1.12
+This repo was tested on Python 3.6 and Tensorflow 1.12 cuda 9.0 cudnn 7.3.1
 
 ## Quick Start
 To train a Machine Reading Comprehension model, please follow the steps below.

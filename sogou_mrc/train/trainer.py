@@ -64,7 +64,6 @@ class Trainer(object):
 
         return final_output
 
-
     @staticmethod
     def _train_and_evaluate(model, train_batch_generator, eval_batch_generator, evaluator, epochs=1, eposides=1,
                             save_dir=None, summary_dir=None, save_summary_steps=10):
@@ -89,13 +88,14 @@ class Trainer(object):
                 eposide_id = epoch * eposides + eposide + 1
                 Trainer._train_sess(model, train_batch_generator, current_step_num, train_summary, save_summary_steps)
 
-                if model.ema_decay>0:
+                if model.ema_decay > 0:
                     trainable_variables = tf.trainable_variables()
                     cur_weights = model.session.run(trainable_variables)
                     model.session.run(model.restore_ema_variables)
                 # Save weights
                 if save_dir is not None:
-                    last_save_path = os.path.join(save_dir, 'last_weights', 'after-eposide')
+                    #last_save_path = os.path.join(save_dir, '/last_weights', '/after-eposide')
+                    last_save_path = save_dir+'/last_weights/after-eposide'
                     model.save(last_save_path, global_step=eposide_id)
 
                 # Evaluate for one epoch on dev set
@@ -103,15 +103,16 @@ class Trainer(object):
                 eval_instances = eval_batch_generator.get_instances()
                 model.session.run(model.eval_metric_init_op)
 
-                eval_num_steps = (eval_batch_generator.get_instance_size() + eval_batch_generator.get_batch_size() - 1) // eval_batch_generator.get_batch_size()
+                eval_num_steps = (
+                                             eval_batch_generator.get_instance_size() + eval_batch_generator.get_batch_size() - 1) // eval_batch_generator.get_batch_size()
                 output = Trainer._eval_sess(model, eval_batch_generator, eval_num_steps, eval_summary)
                 # pred_answer = model.get_best_answer(output, eval_instances)
                 score = evaluator.get_score(model.get_best_answer(output, eval_instances))
 
                 metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in score.items())
                 logging.info("- Eval metrics: " + metrics_string)
-                
-                if model.ema_decay>0:
+
+                if model.ema_decay > 0:
                     feed_dict = {}
                     for i in range(len(trainable_variables)):
                         feed_dict[model.ema_placeholders[i]] = cur_weights[i]
@@ -120,11 +121,13 @@ class Trainer(object):
                 # Save best weights
                 eval_score = score[evaluator.get_monitor()]
                 if eval_score > best_eval_score:
-                    logging.info("- epoch %d eposide %d: Found new best score: %f" % (epoch + 1, eposide + 1, eval_score))
+                    logging.warning(
+                        "- epoch %d eposide %d: Found new best score: %f" % (epoch + 1, eposide + 1, eval_score))
                     best_eval_score = eval_score
                     # Save best weights
                     if save_dir is not None:
-                        best_save_path = os.path.join(save_dir, 'best_weights', 'after-eposide')
+                        #best_save_path = os.path.join(save_dir, 'best_weights', 'after-eposide')
+                        best_save_path = save_dir+'/best_weights/after-eposide'
                         best_save_path = best_saver.save(model.session, best_save_path, global_step=eposide_id)
                         logging.info("- Found new best model, saving in {}".format(best_save_path))
 
@@ -135,12 +138,12 @@ class Trainer(object):
         for _ in range(steps):
             eval_batch = batch_generator.next()
             eval_batch["training"] = False
-            feed_dict = {ph: eval_batch[key] for key, ph in model.input_placeholder_dict.items() if key in eval_batch and key not in ['answer_start','answer_end','is_impossible']}
+            feed_dict = {ph: eval_batch[key] for key, ph in model.input_placeholder_dict.items() if
+                         key in eval_batch and key not in ['answer_start', 'answer_end', 'is_impossible']}
             output = model.session.run(model.output_variable_dict, feed_dict=feed_dict)
             for key in output.keys():
                 final_output[key] += [v for v in output[key]]
         return final_output
-
 
     @staticmethod
     def _evaluate(model, batch_generator, evaluator):
@@ -165,4 +168,3 @@ class Trainer(object):
         output = Trainer.inference(model, batch_generator, eval_num_steps)
         pred_answers = model.get_best_answer(output, instances)
         return pred_answers
-

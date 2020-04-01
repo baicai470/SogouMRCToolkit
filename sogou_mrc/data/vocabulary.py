@@ -69,7 +69,7 @@ class Vocabulary(object):
 
         # 1. Parse pretrained embedding
         embedding_dict = dict()
-        with open(embedding_file) as f:
+        with open(embedding_file, encoding='utf-8') as f:
             for line in f:
                 if len(line.rstrip().split(" ")) <= 2: continue
                 word, vector = line.rstrip().split(" ", 1)
@@ -115,12 +115,12 @@ class Vocabulary(object):
 
     def save(self, file_path):
         logging.info("Saving vocabulary at {}".format(file_path))
-        with open(file_path, "w") as f:
+        with open(file_path, "w", encoding='utf-8') as f:
             json.dump(self.__dict__, f, indent=4)
 
     def load(self, file_path):
         logging.info("Loading vocabulary at {}".format(file_path))
-        with open(file_path) as f:
+        with open(file_path, encoding='utf-8') as f:
             vocab_data = json.load(f)
             self.__dict__.update(vocab_data)
 

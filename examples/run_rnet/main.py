@@ -9,8 +9,8 @@ from sogou_mrc.data.batch_generator import BatchGenerator
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-data_folder = ''
-embedding_folder = ''
+data_folder = 'E:/dataset/SQuAD1.0/'
+embedding_folder = 'E:/dataset/glove/'
 train_file = data_folder + "train-v1.1.json"
 dev_file = data_folder + "dev-v1.1.json"
 
@@ -21,13 +21,18 @@ evaluator = SquadEvaluator(dev_file)
 
 vocab = Vocabulary(do_lowercase=False)
 vocab.build_vocab(train_data + eval_data, min_word_count=3, min_char_count=10)
-word_embedding = vocab.make_word_embedding(embedding_folder + "glove.840B.300d.txt")
+word_embedding = vocab.make_word_embedding(embedding_folder + "glove.6B.50d.txt")
+#vocab_save_path = 'H:/result/rnet/vocab.json'
+#vocab.save(vocab_save_path)
 
-train_batch_generator = BatchGenerator(vocab, train_data, batch_size=50, training=True)
+train_batch_generator = BatchGenerator(vocab, train_data, batch_size=16, training=True)
 
-eval_batch_generator = BatchGenerator(vocab, eval_data, batch_size=50)
+eval_batch_generator = BatchGenerator(vocab, eval_data, batch_size=16)
 train_batch_generator.init()
+
+save_dir = 'H:/result/rnet'
 
 model = RNET(vocab, pretrained_word_embedding=word_embedding)
 model.compile(tf.train.AdadeltaOptimizer, 1.0)
-model.train_and_evaluate(train_batch_generator, eval_batch_generator, evaluator, epochs=200, eposides=2)
+model.train_and_evaluate(train_batch_generator, eval_batch_generator, evaluator, epochs=200, eposides=2,
+                         save_dir=save_dir)
