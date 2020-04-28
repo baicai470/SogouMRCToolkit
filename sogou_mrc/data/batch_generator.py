@@ -6,16 +6,18 @@ import six
 import logging
 
 import multiprocessing
+
+
 class BatchGenerator(object):
     def __init__(self, vocab, instances, batch_size=32, use_char=True, training=False,
-                 additional_fields=None, feature_vocab=None,num_parallel_calls=0,shuffle_ratio=1.0):
+                 additional_fields=None, feature_vocab=None, num_parallel_calls=0, shuffle_ratio=1.0):
         self.instances = instances
         self.vocab = vocab
         self.batch_size = batch_size
         self.use_char = use_char
         self.training = training
         self.shuffle_ratio = shuffle_ratio
-        self.num_parallel_calls = num_parallel_calls if num_parallel_calls>0 else multiprocessing.cpu_count()/2
+        self.num_parallel_calls = num_parallel_calls if num_parallel_calls > 0 else multiprocessing.cpu_count() / 2
 
         if self.instances is None or len(self.instances) == 0:
             raise ValueError('empty instances!!')
@@ -55,7 +57,7 @@ class BatchGenerator(object):
         except:
             raise ValueError('A instance should contain at least "context_tokens", "question_tokens", \
                              "answer_start", "answer_end" four fields!')
-        
+
         if additional_fields is not None and isinstance(additional_fields, list):
             fields.extend(additional_fields)
 
@@ -83,7 +85,7 @@ class BatchGenerator(object):
                 if len(instance[field]) == 0:
                     logging.warning('Data shape of field "%s" not detected! Skip this field.', field)
                     continue
-                
+
                 field_type = get_type(instance[field][0])
                 if field_type is not None:
                     input_type[field] = field_type
@@ -170,11 +172,12 @@ class BatchGenerator(object):
                             instance[field] = tf.cast(table.lookup(instance[field]), tf.int32)
                             break
             return instance
+
         dataset = dataset.map(lambda fields: transform_new_instance(fields))
 
         # 5. Shuffle and repeat
         if self.training:
-            dataset = dataset.shuffle(int(len(self.instances)*self.shuffle_ratio))
+            dataset = dataset.shuffle(int(len(self.instances) * self.shuffle_ratio))
         dataset = dataset.prefetch(self.batch_size)
 
         # 6. Padding and batching

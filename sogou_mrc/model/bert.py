@@ -7,7 +7,7 @@ from collections import OrderedDict, defaultdict
 from sogou_mrc.model.base_model import BaseModel
 from sogou_mrc.train.trainer import Trainer
 # from sogou_mrc.libraries.BertWrapper import BertModelHelper
-from sogou_mrc.nn.layers import  BertEmbedding
+from sogou_mrc.nn.layers import BertEmbedding
 from sogou_mrc.libraries import modeling
 from sogou_mrc.libraries import optimization
 
@@ -27,7 +27,9 @@ class BertBaseline(BaseModel):
         self.start_position = tf.placeholder(shape=[None], dtype=tf.int32)
         self.end_position = tf.placeholder(shape=[None], dtype=tf.int32)
         self.bert_embedding = BertEmbedding(self.bert_dir)
-        final_hidden = self.bert_embedding(input_ids=self.input_ids,input_mask = self.input_mask,segment_ids=self.segment_ids,is_training=self.training,return_pool_output=False)
+        final_hidden = self.bert_embedding(input_ids=self.input_ids, input_mask=self.input_mask,
+                                           segment_ids=self.segment_ids, is_training=self.training,
+                                           return_pool_output=False)
         final_hidden_shape = modeling.get_shape_list(final_hidden, expected_rank=3)
         batch_size = final_hidden_shape[0]
         seq_length = final_hidden_shape[1]

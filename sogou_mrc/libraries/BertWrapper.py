@@ -21,12 +21,12 @@ class BertDataHelper(object):
         self.tokenizer = tokenization.FullTokenizer(vocab_file=VOCAB_FILE, do_lower_case=DO_LOWER_CASE)
         self.index = 0
 
-    def convert(self, instances,data='coqa',max_seq_length=512):
+    def convert(self, instances, data='coqa', max_seq_length=512):
         new_data = []
         for i, instance in enumerate(instances):
-            new_instance = self.convert_coqa_to_bert_input(instance, max_seq_length=max_seq_length) if data=='coqa' \
+            new_instance = self.convert_coqa_to_bert_input(instance, max_seq_length=max_seq_length) if data == 'coqa' \
                 else self.convert_to_bert_input(instance)
-            if new_instance is not None and len(new_instance)>0: new_data.extend(new_instance)
+            if new_instance is not None and len(new_instance) > 0: new_data.extend(new_instance)
         return new_data
 
     def convert_to_bert_input(self, instance, max_seq_length=512, max_query_length=64, is_training=True):
@@ -50,7 +50,7 @@ class BertDataHelper(object):
                 all_doc_tokens.append(sub_token)
         tok_start_position = None
         tok_end_position = None
-        if is_training and  ('is_impossible' not in instance or instance['is_impossible']==0):
+        if is_training and ('is_impossible' not in instance or instance['is_impossible'] == 0):
             tok_start_position = orig_to_tok_index[instance['answer_start']]
             if instance['answer_end'] < len(doc_tokens) - 1:
                 tok_end_position = orig_to_tok_index[instance['answer_end'] + 1] - 1
@@ -59,9 +59,9 @@ class BertDataHelper(object):
             (tok_start_position, tok_end_position) = _improve_answer_span(
                 all_doc_tokens, tok_start_position, tok_end_position, tokenizer,
                 instance['context'].lower())
-        if is_training and 'is_impossible' in instance and instance['is_impossible']==1:
-            tok_start_position= -1
-            tok_end_position =-1
+        if is_training and 'is_impossible' in instance and instance['is_impossible'] == 1:
+            tok_start_position = -1
+            tok_end_position = -1
 
         # The -3 accounts for [CLS], [SEP] and [SEP]
         max_tokens_for_doc = max_seq_length - len(query_tokens) - 3
@@ -124,7 +124,7 @@ class BertDataHelper(object):
 
             start_position = None
             end_position = None
-            if is_training and ('is_impossible' not in instance or instance['is_impossible']==0):
+            if is_training and ('is_impossible' not in instance or instance['is_impossible'] == 0):
                 # For training, if our document chunk does not contain an annotation
                 # we throw it out, since there is nothing to predict.
                 doc_start = doc_span.start
@@ -143,7 +143,7 @@ class BertDataHelper(object):
                     end_position = tok_end_position - doc_start + doc_offset
             if is_training and start_position == -1 and end_position == -1:
                 continue
-            if is_training and 'is_impossible' in instance and instance['is_impossible']==1:
+            if is_training and 'is_impossible' in instance and instance['is_impossible'] == 1:
                 start_position = 0
                 end_position = 0
             self.index += 1
@@ -183,7 +183,7 @@ class BertDataHelper(object):
                     new_instance[k] = v
             new_instances.append(new_instance)
         return new_instances
-    
+
     def convert_coqa_to_bert_input(self, instance, max_seq_length=512, max_query_length=64, is_training=True):
         tokenizer = self.tokenizer
         doc_tokens = instance['context_tokens'] if not self.do_lower_case else [token.lower() for token in
@@ -215,18 +215,22 @@ class BertDataHelper(object):
                 else:
                     tok_end_position = len(all_doc_tokens) - 1
                 (tok_start_position, tok_end_position) = _improve_answer_span(
-                all_doc_tokens, tok_start_position, tok_end_position, tokenizer,
-                instance['answer'])
+                    all_doc_tokens, tok_start_position, tok_end_position, tokenizer,
+                    instance['answer'])
             tok_rationale_start_position = orig_to_tok_index[instance['rationale_start']]
             if instance['rationale_end'] < len(doc_tokens) - 1:
                 tok_rationale_end_position = orig_to_tok_index[instance['rationale_end'] + 1] - 1
             else:
                 tok_rationale_end_position = len(all_doc_tokens) - 1
-            (tok_rationale_start_position, tok_rationale_end_position) = _improve_answer_span(all_doc_tokens, tok_rationale_start_position, tok_rationale_end_position, tokenizer,instance['rationale'])
+            (tok_rationale_start_position, tok_rationale_end_position) = _improve_answer_span(all_doc_tokens,
+                                                                                              tok_rationale_start_position,
+                                                                                              tok_rationale_end_position,
+                                                                                              tokenizer,
+                                                                                              instance['rationale'])
 
-        #if is_training and instance['answer_type'] == 'unknown':
-            #tok_start_position= -1
-            #tok_end_position =-1
+        # if is_training and instance['answer_type'] == 'unknown':
+        # tok_start_position= -1
+        # tok_end_position =-1
 
         # The -3 accounts for [CLS], [SEP] and [SEP]
         max_tokens_for_doc = max_seq_length - len(query_tokens) - 3
@@ -245,10 +249,10 @@ class BertDataHelper(object):
             if start_offset + length == len(all_doc_tokens):
                 break
             start_offset += min(length, self.doc_stride)
-        
+
         if is_training and len(doc_spans) > 1:
             if instance['answer_type'] in ['yes', 'no']:
-                #check is there a full rationale in one chunk for yes/no answer question, if it doesn't exist, throw the example 
+                # check is there a full rationale in one chunk for yes/no answer question, if it doesn't exist, throw the example
                 full_rationale_in_one_chunk = False
                 for (doc_span_index, doc_span) in enumerate(doc_spans):
                     doc_start = doc_span.start
@@ -259,7 +263,7 @@ class BertDataHelper(object):
                 if not full_rationale_in_one_chunk:
                     return None
             if instance['answer_type'] == 'extractive':
-                #check is there a full extractive answer into one chunk, if it doesn't exist, throw the example 
+                # check is there a full extractive answer into one chunk, if it doesn't exist, throw the example
                 full_answer_in_one_chunk = False
                 for (doc_span_index, doc_span) in enumerate(doc_spans):
                     doc_start = doc_span.start
@@ -275,11 +279,15 @@ class BertDataHelper(object):
             if is_training and len(doc_spans) > 1:
                 doc_start = doc_span.start
                 doc_end = doc_span.start + doc_span.length - 1
-                if instance['answer_type'] == 'extractive': # throw chunk dosn't has full answer
-                    if (tok_start_position >= doc_start and tok_start_position <= doc_end and tok_end_position > doc_end) or (tok_end_position >= doc_start and tok_end_position <= doc_end and tok_start_position < doc_start):
+                if instance['answer_type'] == 'extractive':  # throw chunk dosn't has full answer
+                    if (
+                            tok_start_position >= doc_start and tok_start_position <= doc_end and tok_end_position > doc_end) or (
+                            tok_end_position >= doc_start and tok_end_position <= doc_end and tok_start_position < doc_start):
                         continue
-                if instance['answer_type'] in ['yes', 'no']: # throw chunk dosn't has full answer
-                    if (tok_rationale_start_position >= doc_start and tok_rationale_start_position <= doc_end and tok_rationale_end_position > doc_end) or (tok_rationale_end_position >= doc_start and tok_rationale_end_position <= doc_end and tok_rationale_start_position < doc_start):
+                if instance['answer_type'] in ['yes', 'no']:  # throw chunk dosn't has full answer
+                    if (
+                            tok_rationale_start_position >= doc_start and tok_rationale_start_position <= doc_end and tok_rationale_end_position > doc_end) or (
+                            tok_rationale_end_position >= doc_start and tok_rationale_end_position <= doc_end and tok_rationale_start_position < doc_start):
                         continue
             tokens = []
             token_to_orig_map = {}
@@ -338,7 +346,7 @@ class BertDataHelper(object):
                 doc_start = doc_span.start
                 doc_end = doc_span.start + doc_span.length - 1
                 doc_offset = len(query_tokens) + 2
-        
+
                 rationale_mask = [0] * max_seq_length
                 doc_rationale_start = -1
                 doc_rationale_end = -1
@@ -358,21 +366,21 @@ class BertDataHelper(object):
                     if not (tok_start_position >= doc_start and tok_end_position <= doc_end):
                         out_of_span = True
                     if out_of_span:
-                        start_position = 0 
-                        end_position = 0 
+                        start_position = 0
+                        end_position = 0
                         doc_rationale_start = -1
                         doc_rationale_end = -1
-                        #return None #doc_rationale_end = -1
+                        # return None #doc_rationale_end = -1
                     else:
                         start_position = tok_start_position - doc_start + doc_offset
                         end_position = tok_end_position - doc_start + doc_offset
                         if doc_rationale_start == -1 or doc_rationale_end == -1:
                             raise ValueError(instance['qid'])
-                else: # yes no
+                else:  # yes no
                     start_position = 0
                     end_position = 0
                 if doc_rationale_start != -1 and doc_rationale_end != -1:
-                    no_rationale = False 
+                    no_rationale = False
                     ix = doc_rationale_start
                     while ix <= doc_rationale_end:
                         rationale_mask[ix] = 1
@@ -380,7 +388,7 @@ class BertDataHelper(object):
                 else:
                     no_rationale = True
 
-            if is_training and instance['answer_type']=='unknown':
+            if is_training and instance['answer_type'] == 'unknown':
                 start_position = 0
                 end_position = 0
                 rationale_mask = [0] * max_seq_length
@@ -391,7 +399,8 @@ class BertDataHelper(object):
                 if start_position == 0 and end_position == 0 and no_rationale == True:
                     unk_mask, yes_mask, no_mask, extractive_mask = 1, 0, 0, 0
                 elif start_position == 0 and end_position == 0 and no_rationale == False:
-                    unk_mask, yes_mask, no_mask, extractive_mask = 0, instance['abstractive_answer_mask'][1], instance['abstractive_answer_mask'][2], 0
+                    unk_mask, yes_mask, no_mask, extractive_mask = 0, instance['abstractive_answer_mask'][1], \
+                                                                   instance['abstractive_answer_mask'][2], 0
                 elif start_position != 0 and end_position != 0 and no_rationale == False:
                     unk_mask, yes_mask, no_mask, extractive_mask = 0, 0, 0, 1
 
@@ -422,13 +431,13 @@ class BertDataHelper(object):
                         logging.info("start_position: %d" % (start_position))
                         logging.info("end_position: %d" % (end_position))
                         logging.info(
-                          "answer: %s" % (tokenization.printable_text(answer_text)))
+                            "answer: %s" % (tokenization.printable_text(answer_text)))
                     if yes_mask == 1 or no_mask == 1 or extractive_mask == 1:
                         rationale_text = " ".join(tokens[doc_rationale_start:(doc_rationale_end + 1)])
                         logging.info("rationale_start_position: %d" % (doc_rationale_start))
                         logging.info("rationale_end_position: %d" % (doc_rationale_end))
                         logging.info(
-                          "rationale: %s" % (tokenization.printable_text(rationale_text)))
+                            "rationale: %s" % (tokenization.printable_text(rationale_text)))
                         logging.info(
                             "rationale_mask: %s" % " ".join([str(x) for x in rationale_mask]))
 
@@ -442,12 +451,12 @@ class BertDataHelper(object):
                 'segment_ids': segment_ids,
                 'start_position': start_position,
                 'end_position': end_position,
-                'unk_mask' : unk_mask,
-                'yes_mask' : yes_mask,
-                'no_mask' : no_mask,
-                'extractive_mask' : extractive_mask,
-                'question_mask' : question_mask,
-                'rationale_mask' : rationale_mask
+                'unk_mask': unk_mask,
+                'yes_mask': yes_mask,
+                'no_mask': no_mask,
+                'extractive_mask': extractive_mask,
+                'question_mask': question_mask,
+                'rationale_mask': rationale_mask
             }
 
             for k, v in instance.items():
@@ -455,6 +464,7 @@ class BertDataHelper(object):
                     new_instance[k] = v
             new_instances.append(new_instance)
         return new_instances
+
 
 def _check_is_max_context(doc_spans, cur_span_index, position):
     """Check if this is the 'max context' doc span for the token."""
